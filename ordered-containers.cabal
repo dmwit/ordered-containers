@@ -15,6 +15,10 @@ build-type:          Simple
 extra-source-files:  ChangeLog.md
 cabal-version:       >=1.10
 
+source-repository head
+  type:                git
+  location:            https://github.com/dmwit/ordered-containers
+
 library
   exposed-modules:     Data.Map.Ordered, Data.Set.Ordered
   other-modules:       Data.Map.Util
