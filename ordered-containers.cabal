@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                ordered-containers
-version:             0.1.0
+version:             0.1.1
 synopsis:            Set- and Map-like types that remember the order elements were inserted
 -- description:         
 license:             BSD3
