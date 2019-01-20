@@ -36,6 +36,8 @@ import qualified Data.Map as M
 data OSet a = OSet !(Map a Tag) !(Map Tag a)
 
 -- | Values appear in insertion order, not ascending order.
+instance Ord a => Semigroup (OSet a) where (<>) = foldl' (|>)
+instance Ord a => Monoid (OSet a) where mempty = empty
 instance Foldable OSet where foldMap f (OSet _ vs) = foldMap f vs
 instance         Eq   a  => Eq   (OSet a) where (==)    = (==)    `on` toList
 instance         Ord  a  => Ord  (OSet a) where compare = compare `on` toList
