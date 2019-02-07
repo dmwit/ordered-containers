@@ -15,6 +15,7 @@ module Data.Map.Ordered
 	--
 	-- * If both sides contain the same key, the tuple's value wins
 	, (<|), (|<), (>|), (|>)
+	, (<>|), (|<>)
 	-- * Deletion
 	, delete, filter, (\\)
 	-- * Query
@@ -45,9 +46,11 @@ instance (Ord k, Read k, Read v) => Read (OMap k v) where readsPrec = readsPrecL
 
 infixr 5 <|, |< -- copy :
 infixl 5 >|, |>
+infixr 6 <>|, |<> -- copy <>
 
-(<|) , (|<) :: Ord k => (,)  k v -> OMap k v -> OMap k v
-(>|) , (|>) :: Ord k => OMap k v -> (,)  k v -> OMap k v
+(<|) , (|<)  :: Ord k => (,)  k v -> OMap k v -> OMap k v
+(>|) , (|>)  :: Ord k => OMap k v -> (,)  k v -> OMap k v
+(<>|), (|<>) :: Ord k => OMap k v -> OMap k v -> OMap k v
 
 (k, v) <| OMap tvs kvs = OMap (M.insert k (t, v) tvs) (M.insert t (k, v) kvs) where
 	t = maybe (nextLowerTag kvs) fst (M.lookup k tvs)
@@ -62,6 +65,25 @@ o >| (k, v) = OMap (M.insert k (t, v) tvs) (M.insert t (k, v) kvs) where
 
 OMap tvs kvs |> (k, v) = OMap (M.insert k (t, v) tvs) (M.insert t (k, v) kvs) where
 	t = maybe (nextHigherTag kvs) fst (M.lookup k tvs)
+
+o <>| o' = unsafeMappend (o \\ o') o'
+o |<> o' = unsafeMappend o (o' \\ o)
+
+-- assumes that ts and ts' have disjoint keys
+unsafeMappend (OMap ts vs) (OMap ts' vs')
+	= OMap (M.union tsBumped tsBumped')
+	       (M.union vsBumped vsBumped')
+	where
+	bump  = case maxTag vs  of
+		Nothing -> 0
+		Just k  -> -k-1
+	bump' = case minTag vs' of
+		Nothing -> 0
+		Just k  -> -k
+	tsBumped  = fmap (\(t, v) -> (bump + t, v)) ts
+	tsBumped' = fmap (\(t, v) -> (bump'+ t, v)) ts'
+	vsBumped  = (bump +) `M.mapKeysMonotonic` vs
+	vsBumped' = (bump'+) `M.mapKeysMonotonic` vs'
 
 -- | @m \\\\ n@ deletes all the keys that exist in @n@ from @m@
 (\\) :: Ord k => OMap k v -> OMap k v' -> OMap k v
