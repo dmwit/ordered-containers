@@ -36,6 +36,9 @@ import qualified Data.Map as M
 
 data OMap k v = OMap !(Map k (Tag, v)) !(Map Tag (k, v))
 
+instance Functor (OMap k) where
+  fmap f (OMap tvs kvs) = OMap (fmap (\(t, v) -> (t, f v)) tvs)
+                               (fmap (\(k, v) -> (k, f v)) kvs)
 -- | Values are produced in insertion order, not key order.
 instance Foldable (OMap k) where foldMap f (OMap _ kvs) = foldMap (f . snd) kvs
 instance (       Eq   k, Eq   v) => Eq   (OMap k v) where (==)    = (==)    `on` assocs
