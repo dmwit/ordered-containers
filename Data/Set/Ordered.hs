@@ -50,13 +50,13 @@ instance (Ord a, Read a) => Read (OSet a) where readsPrec = readsPrecList fromLi
 -- We provide limited reflection services for the sake of data abstraction.
 
 instance (Data a, Ord a) => Data (OSet a) where
-  gfoldl f z set = z fromList `f` (toList set)
-  toConstr _     = fromListConstr
-  gunfold k z c  = case constrIndex c of
-    1 -> k (z fromList)
-    _ -> error "gunfold"
-  dataTypeOf _   = oSetDataType
-  dataCast1 f    = gcast1 f
+	gfoldl f z set = z fromList `f` (toList set)
+	toConstr _     = fromListConstr
+	gunfold k z c  = case constrIndex c of
+		1 -> k (z fromList)
+		_ -> error "gunfold"
+	dataTypeOf _   = oSetDataType
+	dataCast1 f    = gcast1 f
 
 fromListConstr :: Constr
 fromListConstr = mkConstr oSetDataType "fromList" [] Prefix

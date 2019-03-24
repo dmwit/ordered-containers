@@ -52,13 +52,13 @@ instance (Ord k, Read k, Read v) => Read (OMap k v) where readsPrec = readsPrecL
 -- We provide limited reflection services for the sake of data abstraction.
 
 instance (Data k, Data a, Ord k) => Data (OMap k a) where
-  gfoldl f z m   = z fromList `f` assocs m
-  toConstr _     = fromListConstr
-  gunfold k z c  = case constrIndex c of
-    1 -> k (z fromList)
-    _ -> error "gunfold"
-  dataTypeOf _   = oMapDataType
-  dataCast2 f    = gcast2 f
+	gfoldl f z m   = z fromList `f` assocs m
+	toConstr _     = fromListConstr
+	gunfold k z c  = case constrIndex c of
+		1 -> k (z fromList)
+		_ -> error "gunfold"
+	dataTypeOf _   = oMapDataType
+	dataCast2 f    = gcast2 f
 
 fromListConstr :: Constr
 fromListConstr = mkConstr oMapDataType "fromList" [] Prefix
