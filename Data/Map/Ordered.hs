@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE DeriveFunctor #-}
 #if __GLASGOW_HASKELL__
 {-# LANGUAGE DeriveDataTypeable, StandaloneDeriving #-}
 #endif
@@ -43,7 +44,7 @@ import qualified Data.Map as M
 import Data.Data
 #endif
 
-data OMap k v = OMap !(Map k (Tag, v)) !(Map Tag (k, v))
+data OMap k v = OMap !(Map k (Tag, v)) !(Map Tag (k, v)) deriving Functor
 
 -- | Values are produced in insertion order, not key order.
 instance Foldable (OMap k) where foldMap f (OMap _ kvs) = foldMap (f . snd) kvs
