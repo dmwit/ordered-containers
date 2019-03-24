@@ -1,8 +1,5 @@
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveFunctor #-}
-#if __GLASGOW_HASKELL__
-{-# LANGUAGE DeriveDataTypeable, StandaloneDeriving #-}
-#endif
 
 -- | An 'OMap' behaves much like a 'Map', with all the same asymptotics, but
 -- also remembers the order that keys were inserted.
@@ -33,6 +30,7 @@ module Data.Map.Ordered
 
 import Control.Applicative ((<|>))
 import Control.Monad (guard)
+import Data.Data
 import Data.Foldable (Foldable, foldl', foldMap)
 import Data.Function (on)
 import Data.Map (Map)
@@ -40,11 +38,8 @@ import Data.Map.Util (Index, Tag, maxTag, minTag, nextHigherTag, nextLowerTag, r
 import Prelude hiding (filter, lookup, null)
 import qualified Data.Map as M
 
-#if __GLASGOW_HASKELL__
-import Data.Data
-#endif
-
-data OMap k v = OMap !(Map k (Tag, v)) !(Map Tag (k, v)) deriving Functor
+data OMap k v = OMap !(Map k (Tag, v)) !(Map Tag (k, v))
+	deriving (Functor, Typeable)
 
 -- | Values are produced in insertion order, not key order.
 instance Foldable (OMap k) where foldMap f (OMap _ kvs) = foldMap (f . snd) kvs
@@ -52,13 +47,6 @@ instance (       Eq   k, Eq   v) => Eq   (OMap k v) where (==)    = (==)    `on`
 instance (       Ord  k, Ord  v) => Ord  (OMap k v) where compare = compare `on` assocs
 instance (       Show k, Show v) => Show (OMap k v) where showsPrec = showsPrecList assocs
 instance (Ord k, Read k, Read v) => Read (OMap k v) where readsPrec = readsPrecList fromList
-
-#if __GLASGOW_HASKELL__
-# if __GLASGOW_HASKELL__ >= 708
-deriving instance Typeable OMap
-# else
-deriving instance Typeable2 OMap
-# endif
 
 -- This instance preserves data abstraction at the cost of inefficiency.
 -- We provide limited reflection services for the sake of data abstraction.
@@ -77,7 +65,6 @@ fromListConstr = mkConstr oMapDataType "fromList" [] Prefix
 
 oMapDataType :: DataType
 oMapDataType = mkDataType "Data.Map.Ordered.Map" [fromListConstr]
-#endif
 
 infixr 5 <|, |< -- copy :
 infixl 5 >|, |>

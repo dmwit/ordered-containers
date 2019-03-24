@@ -1,7 +1,4 @@
-{-# LANGUAGE CPP #-}
-#if __GLASGOW_HASKELL__
-{-# LANGUAGE DeriveDataTypeable, StandaloneDeriving #-}
-#endif
+{-# LANGUAGE DeriveDataTypeable #-}
 
 -- | An 'OSet' behaves much like a 'Set', with all the same asymptotics, but
 -- also remembers the order that values were inserted.
@@ -30,6 +27,7 @@ module Data.Set.Ordered
 	) where
 
 import Control.Monad (guard)
+import Data.Data
 import Data.Foldable (Foldable, foldl', foldMap, foldr, toList)
 import Data.Function (on)
 import Data.Map (Map)
@@ -38,11 +36,8 @@ import Data.Set (Set) -- so the haddocks link to the right place
 import Prelude hiding (filter, foldr, lookup, null)
 import qualified Data.Map as M
 
-#if __GLASGOW_HASKELL__
-import Data.Data
-#endif
-
 data OSet a = OSet !(Map a Tag) !(Map Tag a)
+	deriving Typeable
 
 -- | Values appear in insertion order, not ascending order.
 instance Foldable OSet where foldMap f (OSet _ vs) = foldMap f vs
@@ -50,13 +45,6 @@ instance         Eq   a  => Eq   (OSet a) where (==)    = (==)    `on` toList
 instance         Ord  a  => Ord  (OSet a) where compare = compare `on` toList
 instance         Show a  => Show (OSet a) where showsPrec = showsPrecList toList
 instance (Ord a, Read a) => Read (OSet a) where readsPrec = readsPrecList fromList
-
-#if __GLASGOW_HASKELL__
-# if __GLASGOW_HASKELL__ >= 708
-deriving instance Typeable OSet
-# else
-deriving instance Typeable1 OSet
-# endif
 
 -- This instance preserves data abstraction at the cost of inefficiency.
 -- We provide limited reflection services for the sake of data abstraction.
@@ -75,7 +63,6 @@ fromListConstr = mkConstr oSetDataType "fromList" [] Prefix
 
 oSetDataType :: DataType
 oSetDataType = mkDataType "Data.Set.Ordered.Set" [fromListConstr]
-#endif
 
 infixr 5 <|, |<   -- copy :
 infixl 5 >|, |>
