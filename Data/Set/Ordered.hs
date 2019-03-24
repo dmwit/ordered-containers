@@ -7,7 +7,7 @@ module Data.Set.Ordered
 	-- * Trivial sets
 	, empty, singleton
 	-- * Insertion
-	-- | Conventionts:
+	-- | Conventions:
 	--
 	-- * The open side of an angle bracket points to an 'OSet'
 	--
@@ -48,15 +48,14 @@ instance (Ord a, Read a) => Read (OSet a) where readsPrec = readsPrecList fromLi
 
 -- This instance preserves data abstraction at the cost of inefficiency.
 -- We provide limited reflection services for the sake of data abstraction.
-
 instance (Data a, Ord a) => Data (OSet a) where
-	gfoldl f z set = z fromList `f` (toList set)
+	gfoldl f z set = z fromList `f` toList set
 	toConstr _     = fromListConstr
 	gunfold k z c  = case constrIndex c of
 		1 -> k (z fromList)
 		_ -> error "gunfold"
 	dataTypeOf _   = oSetDataType
-	dataCast1 f    = gcast1 f
+	dataCast1      = gcast1
 
 fromListConstr :: Constr
 fromListConstr = mkConstr oSetDataType "fromList" [] Prefix

@@ -50,7 +50,6 @@ instance (Ord k, Read k, Read v) => Read (OMap k v) where readsPrec = readsPrecL
 
 -- This instance preserves data abstraction at the cost of inefficiency.
 -- We provide limited reflection services for the sake of data abstraction.
-
 instance (Data k, Data a, Ord k) => Data (OMap k a) where
 	gfoldl f z m   = z fromList `f` assocs m
 	toConstr _     = fromListConstr
@@ -58,7 +57,7 @@ instance (Data k, Data a, Ord k) => Data (OMap k a) where
 		1 -> k (z fromList)
 		_ -> error "gunfold"
 	dataTypeOf _   = oMapDataType
-	dataCast2 f    = gcast2 f
+	dataCast2      = gcast2
 
 fromListConstr :: Constr
 fromListConstr = mkConstr oMapDataType "fromList" [] Prefix
