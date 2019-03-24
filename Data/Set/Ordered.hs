@@ -1,7 +1,8 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 
--- | An 'OSet' behaves much like a 'Set', with all the same asymptotics, but
--- also remembers the order that values were inserted.
+-- | An 'OSet' behaves much like a 'Set', with mostly the same asymptotics, but
+-- also remembers the order that values were inserted. All operations whose
+-- asymptotics are worse than 'Set' have documentation saying so.
 module Data.Set.Ordered
 	( OSet
 	-- * Trivial sets
@@ -19,7 +20,7 @@ module Data.Set.Ordered
 	-- * Query
 	, null, size, member, notMember
 	-- * Deletion
-	, delete, filter, (\\)
+	, delete, filter, (\\), (|/\), (/\|)
 	-- * Indexing
 	, Index, findIndex, elemAt
 	-- * List conversions
@@ -69,7 +70,14 @@ infixr 6 <>|, |<> -- copy <>
 
 (<|) , (|<)  :: Ord a =>      a -> OSet a -> OSet a
 (>|) , (|>)  :: Ord a => OSet a ->      a -> OSet a
-(<>|), (|<>) :: Ord a => OSet a -> OSet a -> OSet a
+
+-- | /O(m*log(n)+n)/, where /m/ is the size of the smaller set and /n/ is the
+-- size of the larger set.
+(<>|) :: Ord a => OSet a -> OSet a -> OSet a
+
+-- | /O(m*log(n)+n)/, where /m/ is the size of the smaller set and /n/ is the
+-- size of the larger set.
+(|<>) :: Ord a => OSet a -> OSet a -> OSet a
 
 v <| o@(OSet ts vs)
 	| v `member` o = o
@@ -110,10 +118,29 @@ unsafeMappend (OSet ts vs) (OSet ts' vs')
 
 -- | Set difference: @r \\\\ s@ deletes all the values in @s@ from @r@. The
 -- order of @r@ is unchanged.
+--
+-- /O(m*log(n))/ where /m/ is the size of the smaller set and /n/ is the size
+-- of the larger set.
 (\\) :: Ord a => OSet a -> OSet a -> OSet a
 o@(OSet ts vs) \\ o'@(OSet ts' vs') = if size o < size o'
 	then filter (`notMember` o') o
 	else foldr delete o vs'
+
+-- | Intersection. (@/\\@ is meant to look a bit like the standard mathematical
+-- notation for intersection.)
+--
+-- /O(m*log(n\/(m+1)) + r*log(r))/, where /m/ is the size of the smaller set,
+-- /n/ the size of the larger set, and /r/ the size of the result.
+(|/\) :: Ord a => OSet a -> OSet a -> OSet a
+OSet ts vs |/\ OSet ts' vs' = OSet ts'' vs'' where
+	ts'' = M.intersection ts ts'
+	vs'' = M.fromList [(t, v) | (v, t) <- M.toList ts]
+
+-- | @flip ('|/\')@
+--
+-- See asymptotics of '|/\'.
+(/\|) :: Ord a => OSet a -> OSet a -> OSet a
+(/\|) = flip (/\|)
 
 empty :: OSet a
 empty = OSet M.empty M.empty

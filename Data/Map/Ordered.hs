@@ -1,8 +1,9 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveFunctor #-}
 
--- | An 'OMap' behaves much like a 'Map', with all the same asymptotics, but
--- also remembers the order that keys were inserted.
+-- | An 'OMap' behaves much like a 'Map', with mostly the same asymptotics, but
+-- also remembers the order that keys were inserted. All operations whose
+-- asymptotics are worse than 'Map' have documentation saying so.
 module Data.Map.Ordered
 	( OMap
 	-- * Trivial maps
@@ -18,8 +19,10 @@ module Data.Map.Ordered
 	--
 	-- * If both sides contain the same key, the tuple's value wins
 	, (<|), (|<), (>|), (|>)
+	, (<>|), (|<>), unionWithL, unionWithR
 	-- * Deletion
 	, delete, filter, (\\)
+	, (|/\), (/\|), intersectionWith
 	-- * Query
 	, null, size, member, notMember, lookup
 	-- * Indexing
@@ -67,9 +70,20 @@ oMapDataType = mkDataType "Data.Map.Ordered.Map" [fromListConstr]
 
 infixr 5 <|, |< -- copy :
 infixl 5 >|, |>
+infixr 6 <>|, |<> -- copy <>
 
 (<|) , (|<) :: Ord k => (,)  k v -> OMap k v -> OMap k v
 (>|) , (|>) :: Ord k => OMap k v -> (,)  k v -> OMap k v
+
+-- | When a key occurs in both maps, prefer the value from the first map.
+--
+-- See asymptotics of 'unionWithR'.
+(<>|) :: Ord k => OMap k v -> OMap k v -> OMap k v
+
+-- | When a key occurs in both maps, prefer the value from the first map.
+--
+-- See asymptotics of 'unionWithL'.
+(|<>) :: Ord k => OMap k v -> OMap k v -> OMap k v
 
 (k, v) <| OMap tvs kvs = OMap (M.insert k (t, v) tvs) (M.insert t (k, v) kvs) where
 	t = maybe (nextLowerTag kvs) fst (M.lookup k tvs)
@@ -85,7 +99,41 @@ o >| (k, v) = OMap (M.insert k (t, v) tvs) (M.insert t (k, v) kvs) where
 OMap tvs kvs |> (k, v) = OMap (M.insert k (t, v) tvs) (M.insert t (k, v) kvs) where
 	t = maybe (nextHigherTag kvs) fst (M.lookup k tvs)
 
+(<>|) = unionWithR (const const)
+(|<>) = unionWithL (const const)
+
+-- | Take the union. The first 'OMap' \'s argument's indices are lower than the
+-- second. If a key appears in both maps, the first argument's index takes
+-- precedence, and the supplied function is used to combine the values.
+--
+-- /O(r*log(r))/ where /r/ is the size of the result
+unionWithL :: Ord k => (k -> v -> v -> v) -> OMap k v -> OMap k v -> OMap k v
+unionWithL = unionWithInternal (\t t' -> t )
+
+-- | Take the union. The first 'OMap' \'s argument's indices are lower than the
+-- second. If a key appears in both maps, the second argument's index takes
+-- precedence, and the supplied function is used to combine the values.
+--
+-- /O(r*log(r))/ where /r/ is the size of the result
+unionWithR :: Ord k => (k -> v -> v -> v) -> OMap k v -> OMap k v -> OMap k v
+unionWithR = unionWithInternal (\t t' -> t')
+
+unionWithInternal :: Ord k => (Tag -> Tag -> Tag) -> (k -> v -> v -> v) -> OMap k v -> OMap k v -> OMap k v
+unionWithInternal fT fKV (OMap tvs kvs) (OMap tvs' kvs') = fromTV tvs'' where
+	bump  = case maxTag kvs  of
+		Nothing -> 0
+		Just k  -> -k-1
+	bump' = case minTag kvs' of
+		Nothing -> 0
+		Just k  -> -k
+	tvs'' = M.unionWithKey (\k (t,v) (t',v') -> (fT t t', fKV k v v'))
+		(fmap (\(t,v) -> (bump +t,v)) tvs )
+		(fmap (\(t,v) -> (bump'+t,v)) tvs')
+
 -- | @m \\\\ n@ deletes all the keys that exist in @n@ from @m@
+--
+-- /O(m*log(n))/ where /m/ is the size of the smaller map and /n/ is the size
+-- of the larger map.
 (\\) :: Ord k => OMap k v -> OMap k v' -> OMap k v
 o@(OMap tvs kvs) \\ o'@(OMap tvs' kvs') = if size o < size o'
 	then filter (const . (`notMember` o')) o
@@ -128,6 +176,36 @@ delete :: Ord k => k -> OMap k v -> OMap k v
 delete k o@(OMap tvs kvs) = case M.lookup k tvs of
 	Nothing     -> o
 	Just (t, _) -> OMap (M.delete k tvs) (M.delete t kvs)
+
+-- | Intersection. (The @/\\@ is intended to look a bit like the standard
+-- mathematical notation for set intersection.)
+--
+-- See asymptotics of 'intersectionWith'.
+(/\|) :: Ord k => OMap k v -> OMap k v' -> OMap k v
+o /\| o' = intersectionWith (\k v' v -> v) o' o
+
+-- | Intersection. (The @/\\@ is intended to look a bit like the standard
+-- mathematical notation for set intersection.)
+--
+-- See asymptotics of 'intersectionWith'.
+(|/\) :: Ord k => OMap k v -> OMap k v' -> OMap k v
+o |/\ o' = intersectionWith (\k v v' -> v) o o'
+
+-- | Take the intersection. The first 'OMap' \'s argument's indices are used for
+-- the result.
+--
+-- /O(m*log(n\/(m+1)) + r*log(r))/ where /m/ is the size of the smaller map, /n/
+-- is the size of the larger map, and /r/ is the size of the result.
+intersectionWith ::
+	Ord k =>
+	(k -> v -> v' -> v'') ->
+	OMap k v -> OMap k v' -> OMap k v''
+intersectionWith f (OMap tvs kvs) (OMap tvs' kvs') = fromTV
+	$ M.intersectionWithKey (\k (t,v) (t',v') -> (t, f k v v')) tvs tvs'
+
+fromTV :: Ord k => Map k (Tag, v) -> OMap k v
+fromTV tvs = OMap tvs kvs where
+	kvs = M.fromList [(t,(k,v)) | (k,(t,v)) <- M.toList tvs]
 
 findIndex :: Ord k => k -> OMap k v -> Maybe Index
 findIndex k o@(OMap tvs kvs) = do
