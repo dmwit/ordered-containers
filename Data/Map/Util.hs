@@ -1,11 +1,22 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveFoldable #-}
+{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE KindSignatures #-}
 
 module Data.Map.Util where
 
+import Data.Data (Data, Typeable)
 import Data.Map (Map)
 import Data.Monoid -- so that the docs for Monoid link to the right place
 import qualified Data.Map as M
+
+#if !(MIN_VERSION_base(4,8,0))
+import Data.Foldable (Foldable)
+import Data.Traversable (Traversable)
+#endif
 
 -- | An internal index used to track ordering only -- its magnitude doesn't
 -- matter. If you manage to see this documentation, the library author has made
@@ -38,6 +49,8 @@ readsPrecList fromList d = readParen (d > 10) $ \r -> do
 -- tells whether 'mappend' will prefer the indices of its first or second
 -- argument if there are shared elements in both.
 newtype Bias (dir :: IndexPreference) a = Bias { unbiased :: a }
+  deriving (Data, Eq, Foldable, Functor, Ord, Read, Show, Traversable, Typeable)
 data IndexPreference = L | R
+  deriving Typeable
 type L = 'L
 type R = 'R
