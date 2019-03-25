@@ -1,5 +1,17 @@
 # Revision history for ordered-containers
 
+## 0.2 -- 2019-03-24
+
+* Support many more operations:
+	* Semigroup,Monoid,Data,Typeable for OSet
+	* Semigroup,Monoid,Functor,Traversable,Data,Typeable for OMap
+	* union and intersection primitives for both
+* Document asymptotics (when they vary from Set and Map)
+
+## 0.1.1 -- 2018-10-31
+
+* Metadata changes only
+
 ## 0.1.0 -- 2016-12-26
 
 * Documentation fix
