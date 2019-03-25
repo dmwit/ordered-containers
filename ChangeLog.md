@@ -1,5 +1,9 @@
 # Revision history for ordered-containers
 
+## 0.2.1 -- 2019-03-25
+
+* Compatibility fixes from Ryan Scott (thanks!)
+
 ## 0.2 -- 2019-03-24
 
 * Support many more operations:
