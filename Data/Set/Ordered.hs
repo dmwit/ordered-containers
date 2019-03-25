@@ -36,9 +36,9 @@ import Data.Foldable (Foldable, foldl', foldMap, foldr, toList)
 import Data.Function (on)
 import Data.Map (Map)
 import Data.Map.Util
-import Data.Monoid
+import Data.Monoid (Monoid(..))
 #if MIN_VERSION_base(4,9,0)
-import Data.Semigroup
+import Data.Semigroup (Semigroup(..))
 #endif
 import Data.Set (Set) -- so the haddocks link to the right place
 import Prelude hiding (filter, foldr, lookup, null)
@@ -63,7 +63,8 @@ instance (Data a, Ord a) => Data (OSet a) where
 		1 -> k (z fromList)
 		_ -> error "gunfold"
 	dataTypeOf _   = oSetDataType
-	dataCast1      = gcast1
+	-- dataCast1 /must/ be eta-expanded in order to build on GHC 7.8.
+	dataCast1 f    = gcast1 f
 
 fromListConstr :: Constr
 fromListConstr = mkConstr oSetDataType "fromList" [] Prefix

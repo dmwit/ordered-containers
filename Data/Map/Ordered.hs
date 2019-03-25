@@ -41,9 +41,13 @@ import Data.Foldable (Foldable, foldl', foldMap)
 import Data.Function (on)
 import Data.Map (Map)
 import Data.Map.Util
-import Data.Monoid
+import Data.Monoid (Monoid(..))
 #if MIN_VERSION_base(4,9,0)
-import Data.Semigroup
+import Data.Semigroup (Semigroup(..))
+#endif
+#if !(MIN_VERSION_base(4,8,0))
+import Control.Applicative ((<$>))
+import Data.Traversable
 #endif
 import Prelude hiding (filter, lookup, null)
 import qualified Data.Map as M
@@ -67,7 +71,8 @@ instance (Data k, Data a, Ord k) => Data (OMap k a) where
 		1 -> k (z fromList)
 		_ -> error "gunfold"
 	dataTypeOf _   = oMapDataType
-	dataCast2      = gcast2
+	-- dataCast2 /must/ be eta-expanded in order to build on GHC 7.8.
+	dataCast2 f    = gcast2 f
 
 fromListConstr :: Constr
 fromListConstr = mkConstr oMapDataType "fromList" [] Prefix
