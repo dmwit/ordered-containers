@@ -1,6 +1,10 @@
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE KindSignatures #-}
+
 module Data.Map.Util where
 
 import Data.Map (Map)
+import Data.Monoid -- so that the docs for Monoid link to the right place
 import qualified Data.Map as M
 
 -- | An internal index used to track ordering only -- its magnitude doesn't
@@ -29,3 +33,11 @@ readsPrecList fromList d = readParen (d > 10) $ \r -> do
 	("fromList", s) <- lex r
 	(xs, t) <- reads s
 	return (fromList xs, t)
+
+-- | A newtype to hand a 'Monoid' instance on. The phantom first parameter
+-- tells whether 'mappend' will prefer the indices of its first or second
+-- argument if there are shared elements in both.
+newtype Bias (dir :: IndexPreference) a = Bias { unbiased :: a }
+data IndexPreference = L | R
+type L = 'L
+type R = 'R

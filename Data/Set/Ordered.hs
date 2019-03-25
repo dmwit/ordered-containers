@@ -1,4 +1,6 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 -- | An 'OSet' behaves much like a 'Set', with mostly the same asymptotics, but
 -- also remembers the order that values were inserted. All operations whose
@@ -17,6 +19,7 @@ module Data.Set.Ordered
 	-- * The left argument's indices are lower than the right argument's indices
 	, (<|), (|<), (>|), (|>)
 	, (<>|), (|<>)
+	, Bias(Bias, unbiased), L, R
 	-- * Query
 	, null, size, member, notMember
 	-- * Deletion
@@ -32,7 +35,11 @@ import Data.Data
 import Data.Foldable (Foldable, foldl', foldMap, foldr, toList)
 import Data.Function (on)
 import Data.Map (Map)
-import Data.Map.Util (Index, Tag, maxTag, minTag, nextHigherTag, nextLowerTag, readsPrecList, showsPrecList)
+import Data.Map.Util
+import Data.Monoid
+#if MIN_VERSION_base(4,9,0)
+import Data.Semigroup
+#endif
 import Data.Set (Set) -- so the haddocks link to the right place
 import Prelude hiding (filter, foldr, lookup, null)
 import qualified Data.Map as M
@@ -63,6 +70,27 @@ fromListConstr = mkConstr oSetDataType "fromList" [] Prefix
 
 oSetDataType :: DataType
 oSetDataType = mkDataType "Data.Set.Ordered.Set" [fromListConstr]
+
+#if MIN_VERSION_base(4,9,0)
+instance Ord a => Semigroup (Bias L (OSet a)) where Bias o <> Bias o' = Bias (o |<> o')
+instance Ord a => Semigroup (Bias R (OSet a)) where Bias o <> Bias o' = Bias (o <>| o')
+#endif
+
+-- | Empty sets and set union. When combining two sets that share elements, the
+-- indices of the left argument are preferred.
+--
+-- See the asymptotics of ('|<>').
+instance Ord a => Monoid (Bias L (OSet a)) where
+	mempty = Bias empty
+	mappend (Bias o) (Bias o') = Bias (o |<> o')
+
+-- | Empty sets and set union. When combining two sets that share elements, the
+-- indices of the right argument are preferred.
+--
+-- See the asymptotics of ('<>|').
+instance Ord a => Monoid (Bias R (OSet a)) where
+	mempty = Bias empty
+	mappend (Bias o) (Bias o') = Bias (o <>| o')
 
 infixr 5 <|, |<   -- copy :
 infixl 5 >|, |>

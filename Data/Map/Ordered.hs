@@ -1,5 +1,7 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 -- | An 'OMap' behaves much like a 'Map', with mostly the same asymptotics, but
 -- also remembers the order that keys were inserted. All operations whose
@@ -20,6 +22,7 @@ module Data.Map.Ordered
 	-- * If both sides contain the same key, the tuple's value wins
 	, (<|), (|<), (>|), (|>)
 	, (<>|), (|<>), unionWithL, unionWithR
+	, Bias(Bias, unbiased), L, R
 	-- * Deletion
 	, delete, filter, (\\)
 	, (|/\), (/\|), intersectionWith
@@ -37,7 +40,11 @@ import Data.Data
 import Data.Foldable (Foldable, foldl', foldMap)
 import Data.Function (on)
 import Data.Map (Map)
-import Data.Map.Util (Index, Tag, maxTag, minTag, nextHigherTag, nextLowerTag, readsPrecList, showsPrecList)
+import Data.Map.Util
+import Data.Monoid
+#if MIN_VERSION_base(4,9,0)
+import Data.Semigroup
+#endif
 import Prelude hiding (filter, lookup, null)
 import qualified Data.Map as M
 
@@ -67,6 +74,37 @@ fromListConstr = mkConstr oMapDataType "fromList" [] Prefix
 
 oMapDataType :: DataType
 oMapDataType = mkDataType "Data.Map.Ordered.Map" [fromListConstr]
+
+#if MIN_VERSION_base(4,9,0)
+instance (Ord k, Semigroup v) => Semigroup (Bias L (OMap k v)) where
+	Bias o <> Bias o' = Bias (unionWithL (const (<>)) o o')
+instance (Ord k, Semigroup v) => Semigroup (Bias R (OMap k v)) where
+	Bias o <> Bias o' = Bias (unionWithR (const (<>)) o o')
+#endif
+
+-- | Empty maps and map union. When combining two sets that share elements, the
+-- indices of the left argument are preferred, and the values are combined with
+-- 'mappend'.
+--
+-- See the asymptotics of 'unionWithL'.
+instance (Ord k, Monoid v) => Monoid (Bias L (OMap k v)) where
+	mempty = Bias empty
+	mappend (Bias o) (Bias o') = Bias (unionWithL (const mappend) o o')
+
+-- | Empty maps and map union. When combining two sets that share elements, the
+-- indices of the right argument are preferred, and the values are combined
+-- with 'mappend'.
+--
+-- See the asymptotics of 'unionWithR'.
+instance (Ord k, Monoid v) => Monoid (Bias R (OMap k v)) where
+	mempty = Bias empty
+	mappend (Bias o) (Bias o') = Bias (unionWithR (const mappend) o o')
+
+-- | Values are traversed in insertion order, not key order.
+--
+-- /O(n*log(n))/ where /n/ is the size of the map.
+instance Ord k => Traversable (OMap k) where
+	traverse f (OMap tvs kvs) = fromKV <$> traverse (\(k,v) -> (,) k <$> f v) kvs
 
 infixr 5 <|, |< -- copy :
 infixl 5 >|, |>
@@ -206,6 +244,10 @@ intersectionWith f (OMap tvs kvs) (OMap tvs' kvs') = fromTV
 fromTV :: Ord k => Map k (Tag, v) -> OMap k v
 fromTV tvs = OMap tvs kvs where
 	kvs = M.fromList [(t,(k,v)) | (k,(t,v)) <- M.toList tvs]
+
+fromKV :: Ord k => Map Tag (k, v) -> OMap k v
+fromKV kvs = OMap tvs kvs where
+	tvs = M.fromList [(k,(t,v)) | (t,(k,v)) <- M.toList kvs]
 
 findIndex :: Ord k => k -> OMap k v -> Maybe Index
 findIndex k o@(OMap tvs kvs) = do
