@@ -49,8 +49,8 @@ readsPrecList fromList d = readParen (d > 10) $ \r -> do
 -- tells whether 'mappend' will prefer the indices of its first or second
 -- argument if there are shared elements in both.
 newtype Bias (dir :: IndexPreference) a = Bias { unbiased :: a }
-  deriving (Data, Eq, Foldable, Functor, Ord, Read, Show, Traversable, Typeable)
+	deriving (Data, Eq, Foldable, Functor, Ord, Read, Show, Traversable, Typeable)
 data IndexPreference = L | R
-  deriving Typeable
+	deriving Typeable
 type L = 'L
 type R = 'R

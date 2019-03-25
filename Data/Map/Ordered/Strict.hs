@@ -37,8 +37,8 @@ module Data.Map.Ordered.Strict
 import Data.Foldable (foldl')
 import qualified Data.Map.Strict as M
 import Data.Map.Ordered.Internal
-  ( OMap(..), empty, (<>|), (|<>), delete, filter, (\\), (|/\), (/\|), null, size
-  , member, notMember, lookup, findIndex, elemAt, assocs, toAscList, fromTV )
+	( OMap(..), empty, (<>|), (|<>), delete, filter, (\\), (|/\), (/\|), null, size
+	, member, notMember, lookup, findIndex, elemAt, assocs, toAscList, fromTV )
 import Data.Map.Util
 import Prelude hiding (filter, lookup, null)
 
