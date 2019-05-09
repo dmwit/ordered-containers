@@ -28,6 +28,8 @@ module Data.Set.Ordered
 	, Index, findIndex, elemAt
 	-- * List conversions
 	, fromList, toAscList
+	-- * 'Set' conversion
+	, toSet
 	) where
 
 import Control.Monad (guard)
@@ -216,3 +218,9 @@ elemAt o@(OSet ts vs) i = do
 -- insertion order.)
 toAscList :: OSet a -> [a]
 toAscList o@(OSet ts _) = fmap fst (M.toAscList ts)
+
+-- | Convert an 'OSet' to a 'Set'.
+--
+-- /O(n)/, where /n/ is the size of the 'OSet'.
+toSet :: OSet a -> Set a
+toSet (OSet ts _) = M.keysSet ts

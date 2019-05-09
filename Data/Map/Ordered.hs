@@ -32,6 +32,8 @@ module Data.Map.Ordered
 	, Index, findIndex, elemAt
 	-- * List conversions
 	, fromList, assocs, toAscList
+	-- * 'M.Map' conversion
+	, toMap
 	) where
 
 import qualified Data.Map as M ()

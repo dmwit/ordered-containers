@@ -242,3 +242,9 @@ assocs (OMap _ kvs) = map snd $ M.toAscList kvs
 -- | Return key-value pairs in order of increasing key.
 toAscList :: OMap k v -> [(k, v)]
 toAscList (OMap tvs kvs) = map (\(k, (t, v)) -> (k, v)) $ M.toAscList tvs
+
+-- | Convert an 'OMap' to a 'Map'.
+--
+-- /O(n)/, where /n/ is the size of the 'OMap'.
+toMap :: OMap k v -> Map k v
+toMap (OMap tvs _) = fmap snd tvs
