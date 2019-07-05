@@ -1,6 +1,6 @@
 # Revision history for ordered-containers
 
-## next -- ????-??-??
+## 0.2.2 -- 2019-07-05
 
 * Add `toMap` and `toSet`, which support efficient conversions from
   `OMap`s/`OSet`s to `Map`s/`Set`s, respectively.

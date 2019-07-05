@@ -1,5 +1,5 @@
 name:                ordered-containers
-version:             0.2.1
+version:             0.2.2
 synopsis:            Set- and Map-like types that remember the order elements were inserted
 license:             BSD3
 license-file:        LICENSE
