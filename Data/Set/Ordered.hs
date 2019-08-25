@@ -1,6 +1,7 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TypeFamilies #-}
 
 -- | An 'OSet' behaves much like a 'Set', with mostly the same asymptotics, but
 -- also remembers the order that values were inserted. All operations whose
@@ -45,6 +46,7 @@ import Data.Semigroup (Semigroup(..))
 import Data.Set (Set) -- so the haddocks link to the right place
 import Prelude hiding (filter, foldr, lookup, null)
 import qualified Data.Map as M
+import qualified GHC.Exts as Exts
 
 data OSet a = OSet !(Map a Tag) !(Map Tag a)
 	deriving Typeable
@@ -73,6 +75,13 @@ fromListConstr = mkConstr oSetDataType "fromList" [] Prefix
 
 oSetDataType :: DataType
 oSetDataType = mkDataType "Data.Set.Ordered.Set" [fromListConstr]
+
+-- | @'GHC.Exts.fromList' = 'fromList'@ and @'GHC.Exts.toList' = 'toList'@.
+-- @since 0.2.3
+instance Ord a => Exts.IsList (OSet a) where
+	type Item (OSet a) = a
+	fromList = fromList
+	toList = toList
 
 #if MIN_VERSION_base(4,9,0)
 instance Ord a => Semigroup (Bias L (OSet a)) where Bias o <> Bias o' = Bias (o |<> o')

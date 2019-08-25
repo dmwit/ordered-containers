@@ -1,5 +1,9 @@
 # Revision history for ordered-containers
 
+## 0.2.3 -- unreleased
+
+* Add `GHC.Exts.IsList` instances.
+
 ## 0.2.2 -- 2019-07-05
 
 * Add `toMap` and `toSet`, which support efficient conversions from
