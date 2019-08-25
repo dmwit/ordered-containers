@@ -2,6 +2,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module Data.Map.Ordered.Internal where
 
@@ -22,6 +23,7 @@ import Data.Traversable
 #endif
 import Prelude hiding (filter, lookup, null)
 import qualified Data.Map as M
+import qualified GHC.Exts as Exts
 
 data OMap k v = OMap !(Map k (Tag, v)) !(Map Tag (k, v))
 	deriving (Functor, Typeable)
@@ -50,6 +52,13 @@ fromListConstr = mkConstr oMapDataType "fromList" [] Prefix
 
 oMapDataType :: DataType
 oMapDataType = mkDataType "Data.Map.Ordered.Map" [fromListConstr]
+
+-- | @'GHC.Exts.fromList' = 'fromList'@ and @'GHC.Exts.toList' = 'assocs'@.
+-- @since 0.2.3
+instance Ord k => Exts.IsList (OMap k v) where
+	type Item (OMap k v) = (k, v)
+	fromList = fromList
+	toList = assocs
 
 #if MIN_VERSION_base(4,9,0)
 instance (Ord k, Semigroup v) => Semigroup (Bias L (OMap k v)) where
