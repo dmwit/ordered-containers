@@ -3,8 +3,8 @@
 {-# LANGUAGE FlexibleInstances #-}
 
 -- | An 'OSet' behaves much like a 'Set', with mostly the same asymptotics, but
--- also remembers the order that values were inserted. All operations whose
--- asymptotics are worse than 'Set' have documentation saying so.
+-- also remembers the order that values were inserted (i.e., last in, first out).
+-- All operations whose asymptotics are worse than 'Set' have documentation saying so.
 module Data.Set.Ordered
 	( OSet
 	-- * Trivial sets

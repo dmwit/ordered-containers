@@ -4,8 +4,8 @@
 {-# LANGUAGE FlexibleInstances #-}
 
 -- | An 'OMap' behaves much like a 'M.Map', with mostly the same asymptotics, but
--- also remembers the order that keys were inserted. All operations whose
--- asymptotics are worse than 'M.Map' have documentation saying so.
+-- also remembers the order that keys were inserted (i.e., last in, first out). All
+-- operations whose asymptotics are worse than 'M.Map' have documentation saying so.
 module Data.Map.Ordered
 	( OMap
 	-- * Trivial maps
