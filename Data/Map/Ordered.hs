@@ -23,9 +23,10 @@ module Data.Map.Ordered
 	, (<|), (|<), (>|), (|>)
 	, (<>|), (|<>), unionWithL, unionWithR
 	, Bias(Bias, unbiased), L, R
-	-- * Deletion
+	-- * Deletion/Update
 	, delete, filter, (\\)
 	, (|/\), (/\|), intersectionWith
+	, alter
 	-- * Query
 	, null, size, member, notMember, lookup
 	-- * Indexing
