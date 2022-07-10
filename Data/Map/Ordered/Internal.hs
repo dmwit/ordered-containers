@@ -2,10 +2,10 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TupleSections #-}
 
 module Data.Map.Ordered.Internal where
 
-import Control.Applicative ((<|>))
 import Control.Monad (guard)
 import Data.Data
 import Data.Foldable (Foldable, foldl', foldMap)
@@ -248,3 +248,12 @@ toAscList (OMap tvs kvs) = map (\(k, (t, v)) -> (k, v)) $ M.toAscList tvs
 -- /O(n)/, where /n/ is the size of the 'OMap'.
 toMap :: OMap k v -> Map k v
 toMap (OMap tvs _) = fmap snd tvs
+
+-- | Alter the value at k, or absence of. Can be used to insert delete or update
+--   with the same semantics as 'Map's alter
+alter :: Ord k => (Maybe v -> Maybe v) -> k -> OMap k v -> OMap k v
+alter f k om@(OMap tvs kvs) =
+  case fst <$> M.lookup k tvs of
+    Just t -> OMap (M.alter (fmap (t,) . f . fmap snd) k tvs)
+                   (M.alter (fmap (k,) . f . fmap snd) t kvs)
+    Nothing -> maybe om ((om |>) . (k, )) $ f Nothing
