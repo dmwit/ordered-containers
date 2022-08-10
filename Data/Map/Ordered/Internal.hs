@@ -89,7 +89,7 @@ infixr 6 <>|, |<> -- copy <>
 (<|) , (|<) :: Ord k => (,)  k v -> OMap k v -> OMap k v
 (>|) , (|>) :: Ord k => OMap k v -> (,)  k v -> OMap k v
 
--- | When a key occurs in both maps, prefer the value from the first map.
+-- | When a key occurs in both maps, prefer the value from the second map.
 --
 -- See asymptotics of 'unionWithR'.
 (<>|) :: Ord k => OMap k v -> OMap k v -> OMap k v
