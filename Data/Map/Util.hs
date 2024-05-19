@@ -45,11 +45,14 @@ readsPrecList fromList d = readParen (d > 10) $ \r -> do
 	(xs, t) <- reads s
 	return (fromList xs, t)
 
--- | A newtype to hand a 'Monoid' instance on. The phantom first parameter
+-- | A newtype to hang a 'Monoid' instance on. The phantom first parameter
 -- tells whether 'mappend' will prefer the indices of its first or second
 -- argument if there are shared elements in both.
+--
+-- @since 0.2
 newtype Bias (dir :: IndexPreference) a = Bias { unbiased :: a }
 	deriving (Data, Eq, Foldable, Functor, Ord, Read, Show, Traversable, Typeable)
+-- | @since 0.2
 data IndexPreference = L | R
 	deriving Typeable
 type L = 'L

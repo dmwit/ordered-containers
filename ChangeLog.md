@@ -1,9 +1,10 @@
 # Revision history for ordered-containers
 
-## 0.2.3 -- unreleased
+## 0.2.3 -- 2024-05-18
 
-* Add `GHC.Exts.IsList` instances.
-* Add `Hashable` instances.
+* Misc. housekeeping -- version bumps, documentation fixes, etc. (thank you Ryan Scott and Andrew Kent!)
+* Add `IsList` and `Hashable` instances (thank you Alexis King!)
+* `alter` (thank you Raoul Hidalgo Charman!)
 
 ## 0.2.2 -- 2019-07-05
 

@@ -27,7 +27,10 @@ import qualified Data.Map as M
 import qualified GHC.Exts as Exts
 
 data OMap k v = OMap !(Map k (Tag, v)) !(Map Tag (k, v))
-	deriving (Functor, Typeable)
+	deriving
+		( Functor -- ^ @since 0.2
+		, Typeable -- ^ @since 0.2
+		)
 
 -- | Values are produced in insertion order, not key order.
 instance Foldable (OMap k) where foldMap f (OMap _ kvs) = foldMap (f . snd) kvs
@@ -35,10 +38,12 @@ instance (       Eq   k, Eq   v) => Eq   (OMap k v) where (==)    = (==)    `on`
 instance (       Ord  k, Ord  v) => Ord  (OMap k v) where compare = compare `on` assocs
 instance (       Show k, Show v) => Show (OMap k v) where showsPrec = showsPrecList assocs
 instance (Ord k, Read k, Read v) => Read (OMap k v) where readsPrec = readsPrecList fromList
+-- | @since 0.2.3
 instance (Hashable k, Hashable v) => Hashable (OMap k v) where hashWithSalt s = hashWithSalt s . assocs
 
 -- This instance preserves data abstraction at the cost of inefficiency.
 -- We provide limited reflection services for the sake of data abstraction.
+-- | @since 0.2
 instance (Data k, Data a, Ord k) => Data (OMap k a) where
 	gfoldl f z m   = z fromList `f` assocs m
 	toConstr _     = fromListConstr
@@ -56,6 +61,7 @@ oMapDataType :: DataType
 oMapDataType = mkDataType "Data.Map.Ordered.Map" [fromListConstr]
 
 -- | @'GHC.Exts.fromList' = 'fromList'@ and @'GHC.Exts.toList' = 'assocs'@.
+--
 -- @since 0.2.3
 instance Ord k => Exts.IsList (OMap k v) where
 	type Item (OMap k v) = (k, v)
@@ -63,8 +69,10 @@ instance Ord k => Exts.IsList (OMap k v) where
 	toList = assocs
 
 #if MIN_VERSION_base(4,9,0)
+-- | @since 0.2
 instance (Ord k, Semigroup v) => Semigroup (Bias L (OMap k v)) where
 	Bias o <> Bias o' = Bias (unionWithL (const (<>)) o o')
+-- | @since 0.2
 instance (Ord k, Semigroup v) => Semigroup (Bias R (OMap k v)) where
 	Bias o <> Bias o' = Bias (unionWithR (const (<>)) o o')
 #endif
@@ -74,6 +82,8 @@ instance (Ord k, Semigroup v) => Semigroup (Bias R (OMap k v)) where
 -- 'mappend'.
 --
 -- See the asymptotics of 'unionWithL'.
+--
+-- @since 0.2
 instance (Ord k, Monoid v) => Monoid (Bias L (OMap k v)) where
 	mempty = Bias empty
 	mappend (Bias o) (Bias o') = Bias (unionWithL (const mappend) o o')
@@ -83,6 +93,8 @@ instance (Ord k, Monoid v) => Monoid (Bias L (OMap k v)) where
 -- with 'mappend'.
 --
 -- See the asymptotics of 'unionWithR'.
+--
+-- @since 0.2
 instance (Ord k, Monoid v) => Monoid (Bias R (OMap k v)) where
 	mempty = Bias empty
 	mappend (Bias o) (Bias o') = Bias (unionWithR (const mappend) o o')
@@ -90,6 +102,8 @@ instance (Ord k, Monoid v) => Monoid (Bias R (OMap k v)) where
 -- | Values are traversed in insertion order, not key order.
 --
 -- /O(n*log(n))/ where /n/ is the size of the map.
+--
+-- @since 0.2
 instance Ord k => Traversable (OMap k) where
 	traverse f (OMap tvs kvs) = fromKV <$> traverse (\(k,v) -> (,) k <$> f v) kvs
 
@@ -103,11 +117,15 @@ infixr 6 <>|, |<> -- copy <>
 -- | When a key occurs in both maps, prefer the value from the second map.
 --
 -- See asymptotics of 'unionWithR'.
+--
+-- @since 0.2
 (<>|) :: Ord k => OMap k v -> OMap k v -> OMap k v
 
 -- | When a key occurs in both maps, prefer the value from the first map.
 --
 -- See asymptotics of 'unionWithL'.
+--
+-- @since 0.2
 (|<>) :: Ord k => OMap k v -> OMap k v -> OMap k v
 
 (k, v) <| OMap tvs kvs = OMap (M.insert k (t, v) tvs) (M.insert t (k, v) kvs) where
@@ -132,6 +150,8 @@ OMap tvs kvs |> (k, v) = OMap (M.insert k (t, v) tvs) (M.insert t (k, v) kvs) wh
 -- precedence, and the supplied function is used to combine the values.
 --
 -- /O(r*log(r))/ where /r/ is the size of the result
+--
+-- @since 0.2
 unionWithL :: Ord k => (k -> v -> v -> v) -> OMap k v -> OMap k v -> OMap k v
 unionWithL = unionWithInternal (\t t' -> t )
 
@@ -140,6 +160,8 @@ unionWithL = unionWithInternal (\t t' -> t )
 -- precedence, and the supplied function is used to combine the values.
 --
 -- /O(r*log(r))/ where /r/ is the size of the result
+--
+-- @since 0.2
 unionWithR :: Ord k => (k -> v -> v -> v) -> OMap k v -> OMap k v -> OMap k v
 unionWithR = unionWithInternal (\t t' -> t')
 
@@ -206,6 +228,8 @@ delete k o@(OMap tvs kvs) = case M.lookup k tvs of
 -- mathematical notation for set intersection.)
 --
 -- See asymptotics of 'intersectionWith'.
+--
+-- @since 0.2
 (/\|) :: Ord k => OMap k v -> OMap k v' -> OMap k v
 o /\| o' = intersectionWith (\k v' v -> v) o' o
 
@@ -213,6 +237,8 @@ o /\| o' = intersectionWith (\k v' v -> v) o' o
 -- mathematical notation for set intersection.)
 --
 -- See asymptotics of 'intersectionWith'.
+--
+-- @since 0.2
 (|/\) :: Ord k => OMap k v -> OMap k v' -> OMap k v
 o |/\ o' = intersectionWith (\k v v' -> v) o o'
 
@@ -221,6 +247,8 @@ o |/\ o' = intersectionWith (\k v v' -> v) o o'
 --
 -- /O(m*log(n\/(m+1)) + r*log(r))/ where /m/ is the size of the smaller map, /n/
 -- is the size of the larger map, and /r/ is the size of the result.
+--
+-- @since 0.2
 intersectionWith ::
 	Ord k =>
 	(k -> v -> v' -> v'') ->
@@ -257,6 +285,8 @@ toAscList (OMap tvs kvs) = map (\(k, (t, v)) -> (k, v)) $ M.toAscList tvs
 -- | Convert an 'OMap' to a 'Map'.
 --
 -- /O(n)/, where /n/ is the size of the 'OMap'.
+--
+-- @since 0.2.2
 toMap :: OMap k v -> Map k v
 toMap (OMap tvs _) = fmap snd tvs
 

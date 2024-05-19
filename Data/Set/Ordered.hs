@@ -50,7 +50,7 @@ import qualified Data.Map as M
 import qualified GHC.Exts as Exts
 
 data OSet a = OSet !(Map a Tag) !(Map Tag a)
-	deriving Typeable
+	deriving Typeable -- ^ @since 0.2
 
 -- | Values appear in insertion order, not ascending order.
 instance Foldable OSet where foldMap f (OSet _ vs) = foldMap f vs
@@ -58,10 +58,12 @@ instance         Eq   a  => Eq   (OSet a) where (==)    = (==)    `on` toList
 instance         Ord  a  => Ord  (OSet a) where compare = compare `on` toList
 instance         Show a  => Show (OSet a) where showsPrec = showsPrecList toList
 instance (Ord a, Read a) => Read (OSet a) where readsPrec = readsPrecList fromList
-instance      Hashable a => Hashable (OSet a) where hashWithSalt s = hashWithSalt s . toList
+-- | @since 0.2.3
+instance     Hashable a  => Hashable (OSet a) where hashWithSalt s = hashWithSalt s . toList
 
 -- This instance preserves data abstraction at the cost of inefficiency.
 -- We provide limited reflection services for the sake of data abstraction.
+-- | @since 0.2
 instance (Data a, Ord a) => Data (OSet a) where
 	gfoldl f z set = z fromList `f` toList set
 	toConstr _     = fromListConstr
@@ -79,6 +81,7 @@ oSetDataType :: DataType
 oSetDataType = mkDataType "Data.Set.Ordered.Set" [fromListConstr]
 
 -- | @'GHC.Exts.fromList' = 'fromList'@ and @'GHC.Exts.toList' = 'toList'@.
+--
 -- @since 0.2.3
 instance Ord a => Exts.IsList (OSet a) where
 	type Item (OSet a) = a
@@ -86,7 +89,9 @@ instance Ord a => Exts.IsList (OSet a) where
 	toList = toList
 
 #if MIN_VERSION_base(4,9,0)
+-- | @since 0.2
 instance Ord a => Semigroup (Bias L (OSet a)) where Bias o <> Bias o' = Bias (o |<> o')
+-- | @since 0.2
 instance Ord a => Semigroup (Bias R (OSet a)) where Bias o <> Bias o' = Bias (o <>| o')
 #endif
 
@@ -94,6 +99,8 @@ instance Ord a => Semigroup (Bias R (OSet a)) where Bias o <> Bias o' = Bias (o 
 -- indices of the left argument are preferred.
 --
 -- See the asymptotics of ('|<>').
+--
+-- @since 0.2
 instance Ord a => Monoid (Bias L (OSet a)) where
 	mempty = Bias empty
 	mappend (Bias o) (Bias o') = Bias (o |<> o')
@@ -102,6 +109,8 @@ instance Ord a => Monoid (Bias L (OSet a)) where
 -- indices of the right argument are preferred.
 --
 -- See the asymptotics of ('<>|').
+--
+-- @since 0.2
 instance Ord a => Monoid (Bias R (OSet a)) where
 	mempty = Bias empty
 	mappend (Bias o) (Bias o') = Bias (o <>| o')
@@ -173,6 +182,8 @@ o@(OSet ts vs) \\ o'@(OSet ts' vs') = if size o < size o'
 --
 -- /O(m*log(n\/(m+1)) + r*log(r))/, where /m/ is the size of the smaller set,
 -- /n/ the size of the larger set, and /r/ the size of the result.
+--
+-- @since 0.2
 (|/\) :: Ord a => OSet a -> OSet a -> OSet a
 OSet ts vs |/\ OSet ts' vs' = OSet ts'' vs'' where
 	ts'' = M.intersection ts ts'
@@ -181,6 +192,8 @@ OSet ts vs |/\ OSet ts' vs' = OSet ts'' vs'' where
 -- | @flip ('|/\')@
 --
 -- See asymptotics of '|/\'.
+--
+-- @since 0.2
 (/\|) :: Ord a => OSet a -> OSet a -> OSet a
 (/\|) = flip (|/\)
 
@@ -233,5 +246,7 @@ toAscList o@(OSet ts _) = fmap fst (M.toAscList ts)
 -- | Convert an 'OSet' to a 'Set'.
 --
 -- /O(n)/, where /n/ is the size of the 'OSet'.
+--
+-- @since 0.2.2
 toSet :: OSet a -> Set a
 toSet (OSet ts _) = M.keysSet ts
