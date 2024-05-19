@@ -17,6 +17,6 @@ source-repository head
 library
   exposed-modules:     Data.Map.Ordered, Data.Map.Ordered.Strict, Data.Set.Ordered
   other-modules:       Data.Map.Ordered.Internal, Data.Map.Util
-  build-depends:       base >=4.7 && <5, containers >=0.1 && <0.8
+  build-depends:       base >=4.7 && <5, containers >=0.1 && <0.8, hashable >=1.2 && <2.0
   default-language:    Haskell98
   ghc-options:         -fno-warn-tabs

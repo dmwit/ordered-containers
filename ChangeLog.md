@@ -3,6 +3,7 @@
 ## 0.2.3 -- unreleased
 
 * Add `GHC.Exts.IsList` instances.
+* Add `Hashable` instances.
 
 ## 0.2.2 -- 2019-07-05
 

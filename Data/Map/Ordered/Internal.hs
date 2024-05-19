@@ -11,6 +11,7 @@ import Control.Monad (guard)
 import Data.Data
 import Data.Foldable (Foldable, foldl', foldMap)
 import Data.Function (on)
+import Data.Hashable (Hashable(..))
 import Data.Map (Map)
 import Data.Map.Util
 import Data.Monoid (Monoid(..))
@@ -34,6 +35,7 @@ instance (       Eq   k, Eq   v) => Eq   (OMap k v) where (==)    = (==)    `on`
 instance (       Ord  k, Ord  v) => Ord  (OMap k v) where compare = compare `on` assocs
 instance (       Show k, Show v) => Show (OMap k v) where showsPrec = showsPrecList assocs
 instance (Ord k, Read k, Read v) => Read (OMap k v) where readsPrec = readsPrecList fromList
+instance (Hashable k, Hashable v) => Hashable (OMap k v) where hashWithSalt s = hashWithSalt s . assocs
 
 -- This instance preserves data abstraction at the cost of inefficiency.
 -- We provide limited reflection services for the sake of data abstraction.
