@@ -58,7 +58,7 @@ instance         Eq   a  => Eq   (OSet a) where (==)    = (==)    `on` toList
 instance         Ord  a  => Ord  (OSet a) where compare = compare `on` toList
 instance         Show a  => Show (OSet a) where showsPrec = showsPrecList toList
 instance (Ord a, Read a) => Read (OSet a) where readsPrec = readsPrecList fromList
--- | @since 0.2.3
+-- | @since 0.2.4
 instance     Hashable a  => Hashable (OSet a) where hashWithSalt s = hashWithSalt s . toList
 
 -- This instance preserves data abstraction at the cost of inefficiency.
@@ -82,7 +82,7 @@ oSetDataType = mkDataType "Data.Set.Ordered.Set" [fromListConstr]
 
 -- | @'GHC.Exts.fromList' = 'fromList'@ and @'GHC.Exts.toList' = 'toList'@.
 --
--- @since 0.2.3
+-- @since 0.2.4
 instance Ord a => Exts.IsList (OSet a) where
 	type Item (OSet a) = a
 	fromList = fromList

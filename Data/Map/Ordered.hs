@@ -2,6 +2,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TupleSections #-}
 
 -- | An 'OMap' behaves much like a 'M.Map', with mostly the same asymptotics, but
 -- also remembers the order that keys were inserted. All operations whose
@@ -37,7 +38,20 @@ module Data.Map.Ordered
 	, toMap
 	) where
 
-import qualified Data.Map as M ()
+import qualified Data.Map as M
 import Data.Map.Ordered.Internal
 import Data.Map.Util
 import Prelude hiding (filter, lookup, null)
+
+singleton :: (k, v) -> OMap k v
+singleton kv@(k, v) = OMap (M.singleton k (0, v)) (M.singleton 0 kv)
+
+-- | Alter the value (or its absence) associated with a key.
+--
+-- @since 0.2.3
+alter :: Ord k => (Maybe v -> Maybe v) -> k -> OMap k v -> OMap k v
+alter f k om@(OMap tvs kvs) = case M.lookup k tvs of
+	Just (t, _) -> OMap
+		(M.alter (fmap (t,) . f . fmap snd) k tvs)
+		(M.alter (fmap (k,) . f . fmap snd) t kvs)
+	Nothing -> maybe om ((om |>) . (k, )) $ f Nothing

@@ -2,7 +2,6 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeFamilies #-}
 
 module Data.Map.Ordered.Internal where
@@ -37,8 +36,9 @@ instance Foldable (OMap k) where foldMap f (OMap _ kvs) = foldMap (f . snd) kvs
 instance (       Eq   k, Eq   v) => Eq   (OMap k v) where (==)    = (==)    `on` assocs
 instance (       Ord  k, Ord  v) => Ord  (OMap k v) where compare = compare `on` assocs
 instance (       Show k, Show v) => Show (OMap k v) where showsPrec = showsPrecList assocs
+-- | Value-lazy
 instance (Ord k, Read k, Read v) => Read (OMap k v) where readsPrec = readsPrecList fromList
--- | @since 0.2.3
+-- | @since 0.2.4
 instance (Hashable k, Hashable v) => Hashable (OMap k v) where hashWithSalt s = hashWithSalt s . assocs
 
 -- This instance preserves data abstraction at the cost of inefficiency.
@@ -60,19 +60,24 @@ fromListConstr = mkConstr oMapDataType "fromList" [] Prefix
 oMapDataType :: DataType
 oMapDataType = mkDataType "Data.Map.Ordered.Map" [fromListConstr]
 
--- | @'GHC.Exts.fromList' = 'fromList'@ and @'GHC.Exts.toList' = 'assocs'@.
+-- | @'GHC.Exts.fromList' = 'fromList'@ (the value-lazy variant) and
+-- @'GHC.Exts.toList' = 'assocs'@.
 --
--- @since 0.2.3
+-- @since 0.2.4
 instance Ord k => Exts.IsList (OMap k v) where
 	type Item (OMap k v) = (k, v)
 	fromList = fromList
 	toList = assocs
 
 #if MIN_VERSION_base(4,9,0)
--- | @since 0.2
+-- | Uses the value-lazy variant of 'unionWithL'.
+--
+-- @since 0.2
 instance (Ord k, Semigroup v) => Semigroup (Bias L (OMap k v)) where
 	Bias o <> Bias o' = Bias (unionWithL (const (<>)) o o')
--- | @since 0.2
+-- | Uses the value-lazy variant of 'unionWithR'.
+--
+-- @since 0.2
 instance (Ord k, Semigroup v) => Semigroup (Bias R (OMap k v)) where
 	Bias o <> Bias o' = Bias (unionWithR (const (<>)) o o')
 #endif
@@ -81,7 +86,7 @@ instance (Ord k, Semigroup v) => Semigroup (Bias R (OMap k v)) where
 -- indices of the left argument are preferred, and the values are combined with
 -- 'mappend'.
 --
--- See the asymptotics of 'unionWithL'.
+-- See the asymptotics of 'unionWithL'. Uses the value-lazy variant.
 --
 -- @since 0.2
 instance (Ord k, Monoid v) => Monoid (Bias L (OMap k v)) where
@@ -92,7 +97,7 @@ instance (Ord k, Monoid v) => Monoid (Bias L (OMap k v)) where
 -- indices of the right argument are preferred, and the values are combined
 -- with 'mappend'.
 --
--- See the asymptotics of 'unionWithR'.
+-- See the asymptotics of 'unionWithR'. Uses the value-lazy variant.
 --
 -- @since 0.2
 instance (Ord k, Monoid v) => Monoid (Bias R (OMap k v)) where
@@ -107,6 +112,8 @@ instance (Ord k, Monoid v) => Monoid (Bias R (OMap k v)) where
 instance Ord k => Traversable (OMap k) where
 	traverse f (OMap tvs kvs) = fromKV <$> traverse (\(k,v) -> (,) k <$> f v) kvs
 
+-- these are here rather than in Data.Map.Ordered to support the IsList,
+-- Semigroup, and Monoid instances
 infixr 5 <|, |< -- copy :
 infixl 5 >|, |>
 infixr 6 <>|, |<> -- copy <>
@@ -189,9 +196,8 @@ o@(OMap tvs kvs) \\ o'@(OMap tvs' kvs') = if size o < size o'
 empty :: OMap k v
 empty = OMap M.empty M.empty
 
-singleton :: (k, v) -> OMap k v
-singleton kv@(k, v) = OMap (M.singleton k (0, v)) (M.singleton 0 kv)
-
+-- This is here rather than in Data.Map.Ordered to support the Read and IsList
+-- instances.
 -- | If a key appears multiple times, the first occurrence is used for ordering
 -- and the last occurrence is used for its value. The library author welcomes
 -- comments on whether this default is sane.
@@ -289,12 +295,3 @@ toAscList (OMap tvs kvs) = map (\(k, (t, v)) -> (k, v)) $ M.toAscList tvs
 -- @since 0.2.2
 toMap :: OMap k v -> Map k v
 toMap (OMap tvs _) = fmap snd tvs
-
--- | Alter the value at k, or absence of. Can be used to insert delete or update
---   with the same semantics as 'Map's alter
-alter :: Ord k => (Maybe v -> Maybe v) -> k -> OMap k v -> OMap k v
-alter f k om@(OMap tvs kvs) =
-  case fst <$> M.lookup k tvs of
-    Just t -> OMap (M.alter (fmap (t,) . f . fmap snd) k tvs)
-                   (M.alter (fmap (k,) . f . fmap snd) t kvs)
-    Nothing -> maybe om ((om |>) . (k, )) $ f Nothing

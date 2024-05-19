@@ -1,7 +1,4 @@
-{-# LANGUAGE CPP #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TupleSections #-}
 
 -- | An 'OMap' behaves much like a 'M.Map', with mostly the same asymptotics, but
 -- also remembers the order that keys were inserted. All operations whose
@@ -69,6 +66,8 @@ OMap tvs kvs |> (k, v) = OMap (M.insert k (t, v) tvs) (M.insert t (k, v) kvs) wh
 -- precedence, and the supplied function is used to combine the values.
 --
 -- /O(r*log(r))/ where /r/ is the size of the result
+--
+-- @since 0.2
 unionWithL :: Ord k => (k -> v -> v -> v) -> OMap k v -> OMap k v -> OMap k v
 unionWithL = unionWithInternal (\t t' -> t )
 
@@ -77,6 +76,8 @@ unionWithL = unionWithInternal (\t t' -> t )
 -- precedence, and the supplied function is used to combine the values.
 --
 -- /O(r*log(r))/ where /r/ is the size of the result
+--
+-- @since 0.2
 unionWithR :: Ord k => (k -> v -> v -> v) -> OMap k v -> OMap k v -> OMap k v
 unionWithR = unionWithInternal (\t t' -> t')
 
@@ -106,9 +107,21 @@ fromList = foldl' (|>) empty
 --
 -- /O(m*log(n\/(m+1)) + r*log(r))/ where /m/ is the size of the smaller map, /n/
 -- is the size of the larger map, and /r/ is the size of the result.
+--
+-- @since 0.2
 intersectionWith ::
 	Ord k =>
 	(k -> v -> v' -> v'') ->
 	OMap k v -> OMap k v' -> OMap k v''
 intersectionWith f (OMap tvs kvs) (OMap tvs' kvs') = fromTV
 	$ M.intersectionWithKey (\k (t,v) (t',v') -> (t, f k v v')) tvs tvs'
+
+-- | Alter the value (or its absence) associated with a key.
+--
+-- @since 0.2.4
+alter :: Ord k => (Maybe v -> Maybe v) -> k -> OMap k v -> OMap k v
+alter f k om@(OMap tvs kvs) = case M.lookup k tvs of
+	Just (t, _) -> OMap
+		(M.alter (fmap (t,) . f . fmap snd) k tvs)
+		(M.alter (fmap (k,) . f . fmap snd) t kvs)
+	Nothing -> maybe om ((om |>) . (k, )) $ f Nothing

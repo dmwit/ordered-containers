@@ -1,9 +1,13 @@
 # Revision history for ordered-containers
 
-## 0.2.3 -- 2024-05-18
+## 0.2.4 -- 2024-05-18
 
 * Misc. housekeeping -- version bumps, documentation fixes, etc. (thank you Ryan Scott and Andrew Kent!)
 * Add `IsList` and `Hashable` instances (thank you Alexis King!)
+* the strict variant of `alter`
+
+## 0.2.3 -- 2022-11-01
+
 * `alter` (thank you Raoul Hidalgo Charman!)
 
 ## 0.2.2 -- 2019-07-05
