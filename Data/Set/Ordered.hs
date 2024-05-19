@@ -176,13 +176,13 @@ o@(OSet ts vs) \\ o'@(OSet ts' vs') = if size o < size o'
 (|/\) :: Ord a => OSet a -> OSet a -> OSet a
 OSet ts vs |/\ OSet ts' vs' = OSet ts'' vs'' where
 	ts'' = M.intersection ts ts'
-	vs'' = M.fromList [(t, v) | (v, t) <- M.toList ts]
+	vs'' = M.fromList [(t, v) | (v, t) <- M.toList ts'']
 
 -- | @flip ('|/\')@
 --
 -- See asymptotics of '|/\'.
 (/\|) :: Ord a => OSet a -> OSet a -> OSet a
-(/\|) = flip (/\|)
+(/\|) = flip (|/\)
 
 empty :: OSet a
 empty = OSet M.empty M.empty
