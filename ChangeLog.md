@@ -1,6 +1,6 @@
 # Revision history for ordered-containers
 
-## next -- ????-??-??
+## 0.2.5 -- 2026-10-31
 
 * Avoid non-canonical `Monoid` instances on recent GHC versions.
 * Export `alter` from `Data.Map.Ordered.Strict`.
