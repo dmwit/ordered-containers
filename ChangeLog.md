@@ -2,6 +2,7 @@
 
 ## next -- ????-??-??
 
+* Avoid non-canonical `Monoid` instances on recent GHC versions.
 * Export `alter` from `Data.Map.Ordered.Strict`.
 
 ## 0.2.4 -- 2024-05-18
