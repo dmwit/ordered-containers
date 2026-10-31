@@ -23,6 +23,7 @@ module Data.Map.Ordered.Strict
 	-- * Deletion
 	, delete, filter, (\\)
 	, (|/\), (/\|), intersectionWith
+	, alter
 	-- * Query
 	, null, size, member, notMember, lookup
 	-- * Indexing

@@ -1,5 +1,9 @@
 # Revision history for ordered-containers
 
+## next -- ????-??-??
+
+* Export `alter` from `Data.Map.Ordered.Strict`.
+
 ## 0.2.4 -- 2024-05-18
 
 * Misc. housekeeping -- version bumps, documentation fixes, etc. (thank you Ryan Scott and Andrew Kent!)
