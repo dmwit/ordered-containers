@@ -103,7 +103,9 @@ instance Ord a => Semigroup (Bias R (OSet a)) where Bias o <> Bias o' = Bias (o 
 -- @since 0.2
 instance Ord a => Monoid (Bias L (OSet a)) where
 	mempty = Bias empty
+#if !MIN_VERSION_base(4,11,0)
 	mappend (Bias o) (Bias o') = Bias (o |<> o')
+#endif
 
 -- | Empty sets and set union. When combining two sets that share elements, the
 -- indices of the right argument are preferred.
@@ -113,7 +115,9 @@ instance Ord a => Monoid (Bias L (OSet a)) where
 -- @since 0.2
 instance Ord a => Monoid (Bias R (OSet a)) where
 	mempty = Bias empty
+#if !MIN_VERSION_base(4,11,0)
 	mappend (Bias o) (Bias o') = Bias (o <>| o')
+#endif
 
 infixr 5 <|, |<   -- copy :
 infixl 5 >|, |>

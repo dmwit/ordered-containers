@@ -91,7 +91,9 @@ instance (Ord k, Semigroup v) => Semigroup (Bias R (OMap k v)) where
 -- @since 0.2
 instance (Ord k, Monoid v) => Monoid (Bias L (OMap k v)) where
 	mempty = Bias empty
+#if !MIN_VERSION_base(4,11,0)
 	mappend (Bias o) (Bias o') = Bias (unionWithL (const mappend) o o')
+#endif
 
 -- | Empty maps and map union. When combining two sets that share elements, the
 -- indices of the right argument are preferred, and the values are combined
@@ -102,7 +104,9 @@ instance (Ord k, Monoid v) => Monoid (Bias L (OMap k v)) where
 -- @since 0.2
 instance (Ord k, Monoid v) => Monoid (Bias R (OMap k v)) where
 	mempty = Bias empty
+#if !MIN_VERSION_base(4,11,0)
 	mappend (Bias o) (Bias o') = Bias (unionWithR (const mappend) o o')
+#endif
 
 -- | Values are traversed in insertion order, not key order.
 --
